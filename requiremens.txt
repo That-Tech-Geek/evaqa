@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+textblob
+google-generativeai
+python-multipart
