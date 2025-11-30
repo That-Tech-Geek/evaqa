@@ -3,3 +3,4 @@ uvicorn
 textblob
 google-generativeai
 python-multipart
+pylint
