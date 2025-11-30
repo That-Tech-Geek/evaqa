@@ -1,0 +1,17 @@
+{
+  "name": "Founder Trigger",
+  "nodes": [
+    {
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "trigger",
+        "responseMode": "onReceived",
+        "authentication": "headerAuth",
+        "headerName": "X-EVAQA-KEY",
+        "headerValue": "INSERT_YOUR_SECRET_KEY"
+      }
+    }
+  ]
+}
