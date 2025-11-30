@@ -1,0 +1,63 @@
+{
+  "name": "Evaqa Council Workflow",
+  "nodes": [
+    {
+      "name": "Founder Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "trigger-founder"
+      }
+    },
+    {
+      "name": "Feature Extraction",
+      "type": "n8n-nodes-base.executeCommand",
+      "parameters": {
+        "command": "python3 scripts/feature_extractor.py {{$json['url']}}"
+      }
+    },
+    {
+      "name": "Council Voting",
+      "type": "n8n-nodes-base.executeCommand",
+      "parameters": {
+        "command": "python3 scripts/voting_logic.py"
+      }
+    },
+    {
+      "name": "Generate Memo",
+      "type": "n8n-nodes-base.executeCommand",
+      "parameters": {
+        "command": "python3 memo_generator/generate_memo.py"
+      }
+    },
+    {
+      "name": "Push to Decile",
+      "type": "n8n-nodes-base.executeCommand",
+      "parameters": {
+        "command": "python3 hooks/push_to_decile.py"
+      }
+    }
+  ],
+  "connections": {
+    "Founder Trigger": {
+      "main": [
+        [{"node": "Feature Extraction", "type": "main", "index": 0}]
+      ]
+    },
+    "Feature Extraction": {
+      "main": [
+        [{"node": "Council Voting", "type": "main", "index": 0}]
+      ]
+    },
+    "Council Voting": {
+      "main": [
+        [{"node": "Generate Memo", "type": "main", "index": 0}]
+      ]
+    },
+    "Generate Memo": {
+      "main": [
+        [{"node": "Push to Decile", "type": "main", "index": 0}]
+      ]
+    }
+  }
+}
