@@ -1,0 +1,22 @@
+{
+  "name": "evaqa",
+  "version": "1.0.0",
+  "description": "Evaqa Council / Epoq Automation",
+  "main": "index.js",
+  "scripts": {
+    "start": "n8n start",
+    "workflow:lint": "n8n lint workflows/*.json",
+    "workflow:validate": "n8n validate-workflow workflows/*.json"
+  },
+  "dependencies": {
+    "n8n": "^2.231.0",
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.1",
+    "js-yaml": "^4.1.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "author": "Sambit Mishra",
+  "license": "MIT"
+}
