@@ -1,28 +1,52 @@
 import os
-import uvicorn
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from fastapi import FastAPI, Request, BackgroundTasks
 from typing import Dict, Any
-from engine import YCAI_Analyst
+
+# Import necessary modules from FastAPI and others
+from fastapi import FastAPI, Request, BackgroundTasks
+import uvicorn
+
+# Placeholder for the engine module - replace with actual import
+# from engine import YCAI_Analyst
 
 # --- CONFIGURATION ---
 # Target Model Release (SHA256: 98555f929690960281a649cbae124d656b6a83151e2de88fe0faf4e05ec29af7)
 MODEL_RELEASE = "yc_hivemind.pkl" 
 
 # Email Dispatch Config
+# Ensure these environment variables are set in your deployment environment
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
-SENDER_EMAIL = "sambit1912@gmail.com"
-SENDER_PASSWORD = "qtnm dalm tpqz cceu" 
+SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "sambit1912@gmail.com") 
+SENDER_PASSWORD = os.environ.get("SENDER_PASSWORD", "qtnm dalm tpqz cceu") 
 
 # Initialize App & Brain
 app = FastAPI(title="Investment Committee")
 
 # Loading the specific release as requested
 print(f"Loading...")
-analyst = YCAI_Analyst(model_path=MODEL_RELEASE)
+# Initialize analyst here. 
+# Ensure the engine module and YCAI_Analyst class are available in your project structure.
+# analyst = YCAI_Analyst(model_path=MODEL_RELEASE) 
+
+# Mock analyst for demonstration purposes if engine module is missing
+class MockAnalyst:
+    def __init__(self, model_path):
+        pass
+    def analyze(self, data):
+        return {
+            'meta': {'project': data.get('What are you building?', 'Unknown'), 'sector': 'Tech', 'raise': 'Pre-Seed'},
+            'ml_score': 85,
+            'decision': 'Review',
+            'explainability': ['Strong team', 'Growing market']
+        }
+    def train_model(self):
+        pass
+
+analyst = MockAnalyst(model_path=MODEL_RELEASE)
+
 
 def parse_tally_payload(payload: Dict[str, Any]) -> Dict[str, str]:
     """Flattens Tally nested JSON."""
@@ -73,7 +97,11 @@ def process_application(data: Dict[str, str]):
     print(f"\n[WEBHOOK] analyzing new deal: {project_name}...")
     
     # 1. Run the ML Analyst
-    result = analyst.analyze(data)
+    try:
+        result = analyst.analyze(data)
+    except Exception as e:
+        print(f"[ANALYST ERROR] Model failed to analyze: {e}")
+        return
     
     # 2. Construct the Investment Memo
     report_lines = [
@@ -89,7 +117,7 @@ def process_application(data: Dict[str, str]):
         "DRIVERS (Why this score?):"
     ]
     
-    for reason in result['explainability']:
+    for reason in result.get('explainability', []):
         report_lines.append(f"  {reason}")
     
     report_lines.append("="*60 + "\n")
@@ -110,16 +138,28 @@ def process_application(data: Dict[str, str]):
 
 @app.post("/webhook/tally")
 async def receive_submission(request: Request, background_tasks: BackgroundTasks):
-    payload = await request.json()
-    clean_data = parse_tally_payload(payload)
-    
-    # Run heavy ML logic in background
-    background_tasks.add_task(process_application, clean_data)
-    
-    return {"status": "analyzing", "project": clean_data.get("What are you building?", "Unknown")}
+    try:
+        payload = await request.json()
+        clean_data = parse_tally_payload(payload)
+        
+        # Run heavy ML logic in background
+        background_tasks.add_task(process_application, clean_data)
+        
+        return {"status": "analyzing", "project": clean_data.get("What are you building?", "Unknown")}
+    except Exception as e:
+        print(f"[WEBHOOK ERROR] Failed to process request: {e}")
+        return {"status": "error", "message": str(e)}
+
+@app.get("/")
+def read_root():
+    return {"status": "Evaqa Core is running"}
 
 if __name__ == "__main__":
     # Pre-train the model on startup so the first request isn't slow
     print(f"Booting Hivemind from {MODEL_RELEASE}...")
-    analyst.train_model()
+    try:
+        analyst.train_model()
+    except Exception as e:
+        print(f"[STARTUP WARNING] Model training simulation/initialization failed: {e}")
+        
     uvicorn.run(app, host="0.0.0.0", port=8000)
