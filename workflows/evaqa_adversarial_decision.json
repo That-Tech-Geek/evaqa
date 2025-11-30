@@ -1,0 +1,60 @@
+{
+  "name": "Evaqa - 15 Minute Council Workflow",
+  "nodes": [
+    {
+      "id": "1",
+      "name": "Incoming Founder Request",
+      "type": "n8n-nodes-base.webhook",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "evaqa/trigger"
+      }
+    },
+    {
+      "id": "2",
+      "name": "Data Enrichment",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "url": "http://localhost:8000/enrich",
+        "method": "POST",
+        "responseFormat": "json"
+      }
+    },
+    {
+      "id": "3",
+      "name": "Council Voting",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "url": "http://localhost:8000/council",
+        "method": "POST",
+        "responseFormat": "json"
+      }
+    },
+    {
+      "id": "4",
+      "name": "Vote Logic",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "url": "http://localhost:8000/vote",
+        "method": "POST",
+        "responseFormat": "json"
+      }
+    },
+    {
+      "id": "5",
+      "name": "Memo Generator",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "url": "http://localhost:8000/memo",
+        "method": "POST",
+        "responseFormat": "file"
+      }
+    }
+  ],
+  "connections": {
+    "Incoming Founder Request": { "main": [ [ { "node": "Data Enrichment" } ] ] },
+    "Data Enrichment": { "main": [ [ { "node": "Council Voting" } ] ] },
+    "Council Voting": { "main": [ [ { "node": "Vote Logic" } ] ] },
+    "Vote Logic": { "main": [ [ { "node": "Memo Generator" } ] ] }
+  }
+}
