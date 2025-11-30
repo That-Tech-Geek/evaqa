@@ -1,6 +1,10 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from council_agents import run_council
+from council_agents.hawk import HawkAgent
+from council_agents.accountant import AccountantAgent
+from council_agents.wargamer import WargamerAgent
+from council_agents.psychologist import PsychologistAgent
+from council_agents.gatekeeper import GatekeeperAgent
 from voting_logic import resolve_votes
 from memo_generator.generate_memo import create_pdf
 
